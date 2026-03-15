@@ -36,8 +36,8 @@ locals {
 
   containers = {
     for c in var.blob_containers : c.name => {
-      name                  = c.name
-      container_access_type = c.access_type
+      name          = c.name
+      public_access = c.access_type == "private" ? "None" : c.access_type
     }
   }
 
@@ -60,6 +60,7 @@ module "storage_account" {
   account_replication_type = var.account_replication_type
 
   min_tls_version                 = "TLS1_2"
+  shared_access_key_enabled       = true
   allow_nested_items_to_be_public = false
 
   containers = local.containers

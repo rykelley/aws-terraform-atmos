@@ -59,3 +59,21 @@ variable "aks_subnet_prefix" {
   default     = "10.0.1.0/24"
   description = "CIDR for the AKS node subnet"
 }
+
+variable "tenant" {
+  type        = string
+  default     = null
+  description = "Tenant identifier (passed from Atmos, unused in this component)"
+}
+
+variable "label_order" {
+  type        = list(string)
+  default     = ["namespace", "environment", "stage", "name", "attributes"]
+  description = "Label field order for terraform-null-label"
+}
+
+variable "regex_replace_chars" {
+  type        = string
+  default     = "/[^a-zA-Z0-9-]/"
+  description = "Regex to replace unwanted chars in labels"
+}

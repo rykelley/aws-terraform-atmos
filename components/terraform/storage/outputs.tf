@@ -10,10 +10,12 @@ output "storage_account_name" {
 
 output "primary_blob_endpoint" {
   value       = module.storage_account.resource.primary_blob_endpoint
+  sensitive   = true
   description = "Primary blob endpoint"
 }
 
 output "primary_file_endpoint" {
   value       = module.storage_account.resource.primary_file_endpoint
+  sensitive   = true
   description = "Primary file endpoint"
 }

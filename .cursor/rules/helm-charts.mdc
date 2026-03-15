@@ -1,0 +1,15 @@
+---
+description: Conventions for application Helm charts in the apps/ directory
+globs: apps/**/*.yaml
+alwaysApply: false
+---
+
+# Helm Chart Conventions
+
+- Charts live in `apps/{app-name}/` with `Chart.yaml`, `values.yaml`, `templates/`
+- All deployments must include health probes (readinessProbe, livenessProbe)
+- Set resource requests and limits on every container
+- Use `ExternalSecret` resources (not manual K8s Secrets) for sensitive values
+- `ExternalSecret` references `ClusterSecretStore` named `azure-key-vault`
+- PVCs should use `azure-files-csi` or `azure-blob-csi` storage classes
+- Use `{{ .Release.Name }}` prefix for resource names

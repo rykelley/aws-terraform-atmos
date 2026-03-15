@@ -103,3 +103,21 @@ variable "additional_secrets" {
   sensitive   = true
   description = "Additional secrets to store in Key Vault (name => value)"
 }
+
+variable "tenant" {
+  type        = string
+  default     = null
+  description = "Tenant identifier (passed from Atmos, unused in this component)"
+}
+
+variable "label_order" {
+  type        = list(string)
+  default     = ["namespace", "environment", "stage", "name", "attributes"]
+  description = "Label field order for terraform-null-label"
+}
+
+variable "regex_replace_chars" {
+  type        = string
+  default     = "/[^a-zA-Z0-9-]/"
+  description = "Regex to replace unwanted chars in labels"
+}

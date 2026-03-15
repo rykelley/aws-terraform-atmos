@@ -31,11 +31,11 @@ module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "~> 0.7"
 
-  name                = module.label.id
-  resource_group_name = data.azurerm_resource_group.this.name
-  location            = var.region
-  address_space       = var.vnet_address_space
-  tags                = module.label.tags
+  name          = module.label.id
+  parent_id     = data.azurerm_resource_group.this.id
+  location      = var.region
+  address_space = var.vnet_address_space
+  tags          = module.label.tags
 
   subnets = {
     aks = {

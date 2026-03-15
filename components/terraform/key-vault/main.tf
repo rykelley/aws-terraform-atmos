@@ -36,12 +36,18 @@ data "azurerm_client_config" "current" {}
 locals {
   resource_group_name = var.resource_group_name != "" ? var.resource_group_name : "${var.namespace}-${var.environment}-${var.stage}-rg"
 
-  storage_secrets = var.storage_account_name != "" ? {
-    storage-account-name = var.storage_account_name
-    storage-account-key  = var.storage_account_key
-  } : {}
+  secret_names = concat(
+    var.storage_account_name != "" ? ["storage-account-name", "storage-account-key"] : [],
+    keys(nonsensitive(var.additional_secrets))
+  )
 
-  all_secrets = merge(local.storage_secrets, var.additional_secrets)
+  secret_values = merge(
+    var.storage_account_name != "" ? {
+      "storage-account-name" = var.storage_account_name
+      "storage-account-key"  = var.storage_account_key
+    } : {},
+    var.additional_secrets
+  )
 }
 
 resource "azurerm_key_vault" "this" {
@@ -64,10 +70,10 @@ resource "azurerm_role_assignment" "deployer_secrets_officer" {
 }
 
 resource "azurerm_key_vault_secret" "secrets" {
-  for_each = local.all_secrets
+  for_each = toset(local.secret_names)
 
-  name         = each.key
-  value        = each.value
+  name         = each.value
+  value        = local.secret_values[each.value]
   key_vault_id = azurerm_key_vault.this.id
   tags         = module.label.tags
 

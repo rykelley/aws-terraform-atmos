@@ -6,12 +6,12 @@ components:
       vars:
         name: aks
         attributes: []
-        kubernetes_version: "1.30"
+        kubernetes_version: "1.35"
         system_node_count: 2
-        system_node_vm_size: Standard_D2s_v5
+        system_node_vm_size: Standard_D2s_v6
         system_node_os_disk_size_gb: 50
         user_node_count: 2
-        user_node_vm_size: Standard_D4s_v5
+        user_node_vm_size: Standard_D4s_v6
         user_node_os_disk_size_gb: 100
         rbac_enabled: true
         oidc_issuer_enabled: true

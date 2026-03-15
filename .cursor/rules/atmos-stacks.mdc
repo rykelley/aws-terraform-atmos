@@ -1,0 +1,16 @@
+---
+description: Conventions for Atmos stack YAML files (catalogs, deploys, defaults)
+globs: stacks/**/*.yaml
+alwaysApply: false
+---
+
+# Atmos Stack Conventions
+
+- Org defaults go in `stacks/orgs/homelab/_defaults.yaml` (namespace, tags, backend config)
+- Component defaults go in `stacks/catalog/{terraform,ansible,helmfile}/{name}.yaml`
+- Environment stacks go in `stacks/deploy/{stage}/{stack}.yaml`
+- Environment stacks MUST import `orgs/homelab/_defaults` plus relevant catalog entries
+- Override only environment-specific values under `components.{type}.{name}.vars`
+- Naming uses Cloud Posse label: `{namespace}-{environment}-{stage}-{name}`
+- Backend key template: `terraform/{{ .component }}/{{ .vars.stage }}.tfstate`
+- When adding a new component: create catalog, import in deploy stacks, add to workflows

@@ -1,0 +1,16 @@
+---
+description: Conventions for Terraform components using AVM + Cloud Posse label
+globs: components/terraform/**/*.tf
+alwaysApply: false
+---
+
+# Terraform Component Conventions
+
+- Every component MUST include `module "label"` using `cloudposse/label/null ~> 0.25` as the first block in `main.tf`
+- Use `module.label.id` for resource names, `module.label.tags` for tags
+- Azure resources with naming constraints (storage accounts: 24 char, lowercase alphanumeric; key vaults: 24 char) need a secondary label with `id_length_limit`, `delimiter = ""`, and `regex_replace_chars`
+- Required variables in every component: `namespace`, `environment`, `stage`, `name`, `attributes`, `delimiter`, `tags`, `region`
+- Provider: `azurerm >= 4.0`, Terraform `>= 1.5.0`
+- Use Azure Verified Modules: `Azure/avm-res-{provider}-{resource}/azurerm`
+- Cross-component references use `data` sources, not remote state
+- Do NOT hardcode resource names; derive from label module

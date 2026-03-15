@@ -1,0 +1,13 @@
+---
+description: Conventions for Helmfile components deployed via Atmos
+globs: components/helmfile/**/*.yaml
+alwaysApply: false
+---
+
+# Helmfile Conventions
+
+- Access Atmos vars via `.Values` (e.g. `{{ .Values.chart_version | default "1.0.0" }}`)
+- Always set `createNamespace: true`, `wait: true`, `timeout: 300`
+- Always define resource requests and limits for all containers
+- For Azure Workload Identity pods: annotate service account with `azure.workload.identity/client-id` and add `azure.workload.identity/use: "true"` pod label
+- Each Helmfile component needs a matching catalog at `stacks/catalog/helmfile/{name}.yaml`

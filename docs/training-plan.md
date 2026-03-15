@@ -435,6 +435,145 @@ All of these are orchestrated by `atmos workflow full -s dev` in the right order
 
 ---
 
+## Part 8: Cursor AI Skills and Rules
+
+This project includes custom Cursor skills and rules that teach the AI assistant
+how this codebase works. Without them, the assistant starts from zero every
+conversation -- it doesn't know your naming conventions, module patterns, or
+deployment flow. With them, it follows the same patterns you do automatically.
+
+### What are Skills?
+
+Skills live in `.cursor/skills/`. Each is a `SKILL.md` file that activates when
+you ask the assistant something matching its trigger terms. Think of them as
+domain knowledge the AI can reference on demand.
+
+| Skill | When it activates | What it teaches the AI |
+|-------|-------------------|----------------------|
+| `atmos-stacks` | Mentions of Atmos, stacks, catalogs, workflows | Full project layout, how to add components, stack inheritance, `atmos` CLI commands |
+| `terraform-azure-avm` | Working with `.tf` files, Azure resources | AVM module pattern, Cloud Posse label requirement, Azure naming constraints, required variables |
+| `ansible-aks` | Ansible playbooks, AKS configuration | `kubernetes.core` collection pattern, StorageClass and ClusterSecretStore creation |
+| `helmfile-deploy` | Helmfile, Helm deployments to AKS | `.Values` interpolation from Atmos, resource limits, Workload Identity annotations |
+| `azure-keyvault-eso` | Secrets, Key Vault, ESO, Workload Identity | End-to-end secrets flow from Key Vault through ESO to pod environment variables |
+
+**Example:** You ask "add a Terraform component for Cosmos DB." Without the
+skill, the AI might create a bare module. With the `terraform-azure-avm` skill,
+it automatically:
+
+1. Creates the four-file structure (`main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`)
+2. Adds `module "label"` from `cloudposse/label/null` as the first block
+3. Uses an AVM module (`Azure/avm-res-documentdb-databaseaccount/azurerm`)
+4. Declares all required variables (`namespace`, `environment`, `stage`, etc.)
+5. Names the resource with `module.label.id` and tags with `module.label.tags`
+6. Tells you to create a catalog entry and import it in the deploy stacks
+
+### What are Rules?
+
+Rules live in `.cursor/rules/`. They activate automatically based on file glob
+patterns -- you don't have to ask for them. When you open a matching file, the
+rule is injected into the AI's context.
+
+| Rule | Activates on | What it enforces |
+|------|-------------|-----------------|
+| `terraform-components` | `components/terraform/**/*.tf` | Label-first pattern, AVM usage, no hardcoded names |
+| `atmos-stacks` | `stacks/**/*.yaml` | Import structure, catalog/deploy separation, backend templates |
+| `helmfile-components` | `components/helmfile/**/*.yaml` | `.Values` access, resource limits, Workload Identity |
+| `ansible-playbooks` | `components/ansible/**/*.yml` | localhost targeting, `kubernetes.core`, inline K8s manifests |
+| `helm-charts` | `apps/**/*.yaml` | ExternalSecret over manual secrets, health probes, CSI classes |
+
+**Example:** You open `components/terraform/aks/main.tf` and ask "add a node
+pool." The `terraform-components` rule is already active because the file matches
+`components/terraform/**/*.tf`. The AI knows to use `module.label` for naming,
+reference AVM module patterns, and not hardcode any resource names.
+
+### Skills vs Rules: When Each Applies
+
+| | Skills | Rules |
+|---|--------|-------|
+| **Location** | `.cursor/skills/{name}/SKILL.md` | `.cursor/rules/{name}.mdc` |
+| **Activation** | When you ask something matching the description | When you open a file matching the glob pattern |
+| **Purpose** | Teach how to build new things | Enforce conventions on existing files |
+| **Scope** | Broad domain knowledge | File-type specific constraints |
+| **Analogy** | A training manual | A linter that speaks English |
+
+### How to Use Them
+
+**You don't have to do anything special.** Skills and rules activate
+automatically. Just work normally:
+
+- Open a `.tf` file and ask a question -- the Terraform rule kicks in
+- Ask "add a new Helmfile component" -- the `helmfile-deploy` skill activates
+- Ask "how do secrets work" -- the `azure-keyvault-eso` skill provides the full flow
+
+**To see what's available:**
+
+```bash
+# List all skills
+ls .cursor/skills/
+
+# List all rules
+ls .cursor/rules/
+
+# Read a specific skill
+cat .cursor/skills/terraform-azure-avm/SKILL.md
+```
+
+### Adding Your Own
+
+**New skill** (for a new domain, e.g. monitoring with Prometheus):
+
+```bash
+mkdir .cursor/skills/prometheus-monitoring
+```
+
+Create `SKILL.md` with frontmatter:
+
+```yaml
+---
+name: prometheus-monitoring
+description: >-
+  Deploy and configure Prometheus monitoring for AKS. Use when working with
+  monitoring, alerting, Prometheus, Grafana, or metrics.
+---
+```
+
+Then add instructions the AI should follow.
+
+**New rule** (for a file pattern, e.g. GitHub Actions):
+
+Create `.cursor/rules/github-actions.mdc`:
+
+```yaml
+---
+description: Conventions for GitHub Actions workflows
+globs: .github/workflows/*.yml
+alwaysApply: false
+---
+```
+
+Then add the conventions you want enforced.
+
+### Why This Matters for a Team
+
+Without skills and rules, every team member's AI assistant behaves differently.
+One person's AI might create Terraform modules with inline names. Another's
+might skip the label module. A third might put secrets directly in Kubernetes
+manifests.
+
+With project-level skills and rules committed to git:
+
+- **Every team member's AI follows the same conventions** from day one
+- **New contributors** get an AI that already understands the project patterns
+- **Convention drift** is caught before code review, not during it
+- **Domain knowledge** (like the ESO secrets flow) is always available, not locked in one person's head
+- **Onboarding time drops** because the AI can explain the project in context
+
+These files are version-controlled like any other code. When you change a
+convention (e.g., upgrade from AVM v0.2 to v1.0), update the skill and every
+future AI interaction reflects the change.
+
+---
+
 ## Further Reading
 
 - [Atmos Documentation](https://atmos.tools/)
@@ -446,3 +585,5 @@ All of these are orchestrated by `atmos workflow full -s dev` in the right order
 - [Atmos Backend Configuration](https://atmos.tools/stacks/backend)
 - [Cloud Posse terraform-null-label](https://github.com/cloudposse/terraform-null-label)
 - [External Secrets Operator](https://external-secrets.io/)
+- [Cursor Rules Documentation](https://docs.cursor.com/context/rules-for-ai)
+- [Cursor Skills Documentation](https://docs.cursor.com/context/skills)

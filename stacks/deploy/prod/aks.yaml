@@ -44,9 +44,9 @@ components:
         name: aks
         kubernetes_version: "1.30"
         system_node_count: 2
-        system_node_vm_size: Standard_D2s_v5
+        system_node_vm_size: Standard_D2s_v6
         user_node_count: 2
-        user_node_vm_size: Standard_D4s_v5
+        user_node_vm_size: Standard_D4s_v6
 
     key-vault:
       vars:

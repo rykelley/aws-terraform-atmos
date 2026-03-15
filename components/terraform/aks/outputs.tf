@@ -9,29 +9,29 @@ output "cluster_name" {
 }
 
 output "cluster_fqdn" {
-  value       = module.aks.resource.fqdn
+  value       = module.aks.fqdn
   description = "AKS cluster FQDN"
 }
 
 output "kube_config_raw" {
-  value       = module.aks.resource.kube_config_raw
+  value       = module.aks.kube_config
   sensitive   = true
   description = "Raw kubeconfig for the AKS cluster"
 }
 
 output "kube_admin_config_raw" {
-  value       = module.aks.resource.kube_admin_config_raw
+  value       = module.aks.kube_admin_config
   sensitive   = true
   description = "Raw admin kubeconfig for the AKS cluster"
 }
 
 output "cluster_identity_principal_id" {
-  value       = module.aks.cluster_identity.principal_id
+  value       = module.aks.identity_principal_id
   description = "Principal ID of the AKS managed identity"
 }
 
 output "oidc_issuer_url" {
-  value       = module.aks.resource.oidc_issuer_url
+  value       = module.aks.oidc_issuer_profile_issuer_url
   description = "OIDC issuer URL for workload identity"
 }
 

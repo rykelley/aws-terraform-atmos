@@ -33,3 +33,5 @@ logs:
 
 settings:
   list_merge_strategy: replace
+  telemetry:
+    enabled: false

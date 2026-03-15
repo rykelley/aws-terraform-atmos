@@ -42,11 +42,11 @@ components:
     aks:
       vars:
         name: aks
-        kubernetes_version: "1.30"
-        system_node_count: 1
-        system_node_vm_size: Standard_B2s
-        user_node_count: 1
-        user_node_vm_size: Standard_B2s
+        kubernetes_version: "1.35"
+        system_node_count: 3
+        system_node_vm_size: Standard_B2s_v2
+        user_node_count: 2
+        user_node_vm_size: Standard_B4s_v2
 
     key-vault:
       vars:

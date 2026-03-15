@@ -1,0 +1,14 @@
+---
+description: Conventions for Ansible playbooks configuring AKS clusters
+globs: components/ansible/**/*.yml
+alwaysApply: false
+---
+
+# Ansible Playbook Conventions
+
+- Target `localhost` with `connection: local` and `gather_facts: false`
+- Use `kubernetes.core` collection for all K8s operations
+- Pass `kubeconfig` path to every `kubernetes.core.k8s` task
+- Variables flow from Atmos stacks via `vars:`
+- Inline Kubernetes manifests as `definition:` blocks (no separate YAML files)
+- Always set `state: present` explicitly
