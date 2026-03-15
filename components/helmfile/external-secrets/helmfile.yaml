@@ -1,0 +1,44 @@
+repositories:
+  - name: external-secrets
+    url: https://charts.external-secrets.io
+
+releases:
+  - name: external-secrets
+    namespace: external-secrets
+    chart: external-secrets/external-secrets
+    version: "{{ .Values.chart_version | default \"0.10.7\" }}"
+    createNamespace: true
+    wait: true
+    timeout: 300
+    values:
+      - installCRDs: true
+        serviceAccount:
+          create: true
+          name: "{{ .Values.service_account_name | default \"external-secrets-sa\" }}"
+          annotations:
+            azure.workload.identity/client-id: "{{ .Values.eso_identity_client_id | default \"\" }}"
+        podLabels:
+          azure.workload.identity/use: "true"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        webhook:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+        certController:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi

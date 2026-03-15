@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-api
+  labels:
+    {{- include "demo.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: api
+    spec:
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.api.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: TITLE
+              value: {{ .Values.api.env.TITLE | quote }}
+            - name: REDIS_HOST
+              value: "{{ .Release.Name }}-redis"
+            - name: REDIS_PORT
+              value: "{{ .Values.redis.service.port }}"
+            {{- if .Values.externalSecrets.enabled }}
+            - name: AZURE_STORAGE_ACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-azure-storage
+                  key: azurestorageaccountname
+            - name: AZURE_STORAGE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-azure-storage
+                  key: azurestorageaccountkey
+            {{- end }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- if .Values.api.storage.enabled }}
+          volumeMounts:
+            - name: app-data
+              mountPath: {{ .Values.api.storage.mountPath }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.api.service.targetPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.api.service.targetPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      {{- if .Values.api.storage.enabled }}
+      volumes:
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-api-data
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-api
+  labels:
+    {{- include "demo.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  type: {{ .Values.api.service.type }}
+  ports:
+    - port: {{ .Values.api.service.port }}
+      targetPort: {{ .Values.api.service.targetPort }}
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/instance: {{ .Release.Name }}

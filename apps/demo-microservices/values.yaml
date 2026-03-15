@@ -1,0 +1,79 @@
+global:
+  namespace: demo-app
+  environment: dev
+
+api:
+  replicas: 1
+  image:
+    repository: mcr.microsoft.com/azuredocs/aks-helloworld
+    tag: "v1"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    TITLE: "Homelab AKS Demo API"
+  storage:
+    enabled: true
+    mountPath: /app/data
+    storageClass: azure-file-csi
+    size: 5Gi
+    accessMode: ReadWriteMany
+
+worker:
+  replicas: 1
+  image:
+    repository: mcr.microsoft.com/azuredocs/aks-helloworld
+    tag: "v1"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    TITLE: "Homelab AKS Demo Worker"
+  storage:
+    enabled: true
+    mountPath: /app/data
+    existingClaim: ""
+
+redis:
+  replicas: 1
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 6379
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: demo.homelab.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+externalSecrets:
+  enabled: true
+  storeName: azure-key-vault
+  refreshInterval: "1h"
+  additionalSecrets: []

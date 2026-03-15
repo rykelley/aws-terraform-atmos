@@ -1,0 +1,7 @@
+components:
+  helmfile:
+    ingress:
+      metadata:
+        component: ingress
+      vars:
+        chart_version: "4.11.3"

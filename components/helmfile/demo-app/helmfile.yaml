@@ -1,0 +1,29 @@
+releases:
+  - name: demo-app
+    namespace: demo-app
+    chart: ../../../apps/demo-microservices
+    createNamespace: false
+    wait: true
+    timeout: 300
+    values:
+      - global:
+          namespace: demo-app
+          environment: "{{ .Values.stage | default \"dev\" }}"
+        api:
+          replicas: {{ .Values.api_replicas | default 1 }}
+          env:
+            TITLE: "Homelab {{ .Values.stage | default \"dev\" }} API"
+          storage:
+            enabled: true
+            storageClass: azure-file-csi
+            size: 5Gi
+        worker:
+          replicas: {{ .Values.worker_replicas | default 1 }}
+          env:
+            TITLE: "Homelab {{ .Values.stage | default \"dev\" }} Worker"
+        redis:
+          replicas: 1
+        ingress:
+          enabled: true
+          className: nginx
+          host: "demo-{{ .Values.stage | default \"dev\" }}.homelab.local"

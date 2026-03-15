@@ -1,0 +1,13 @@
+components:
+  terraform:
+    key-vault:
+      metadata:
+        component: key-vault
+      vars:
+        name: kv
+        attributes: []
+        sku_name: standard
+        soft_delete_retention_days: 7
+        purge_protection_enabled: false
+        eso_service_account_name: external-secrets-sa
+        eso_service_account_namespace: external-secrets

@@ -1,0 +1,21 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+backend.tf.json
+*.terraform.lock.hcl
+
+# Atmos generated
+**/*.ansible.vars.yaml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Secrets
+*.env
+.env.*

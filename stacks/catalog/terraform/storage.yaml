@@ -1,0 +1,12 @@
+components:
+  terraform:
+    storage:
+      metadata:
+        component: storage
+      vars:
+        name: storage
+        attributes: []
+        account_tier: Standard
+        account_replication_type: LRS
+        blob_containers: []
+        file_shares: []

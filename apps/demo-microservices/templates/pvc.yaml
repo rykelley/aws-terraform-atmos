@@ -1,0 +1,16 @@
+{{- if .Values.api.storage.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-api-data
+  labels:
+    {{- include "demo.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  accessModes:
+    - {{ .Values.api.storage.accessMode }}
+  storageClassName: {{ .Values.api.storage.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.api.storage.size }}
+{{- end }}

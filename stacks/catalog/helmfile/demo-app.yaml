@@ -1,0 +1,8 @@
+components:
+  helmfile:
+    demo-app:
+      metadata:
+        component: demo-app
+      vars:
+        api_replicas: 1
+        worker_replicas: 1

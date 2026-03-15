@@ -1,0 +1,63 @@
+workflows:
+  bootstrap:
+    description: "One-time Terraform state bootstrap (run from scripts/)"
+    steps:
+      - command: terraform init
+        component_path: components/terraform/bootstrap
+      - command: terraform apply -auto-approve
+        component_path: components/terraform/bootstrap
+
+  infra:
+    description: "Deploy all Azure infrastructure (resource group, network, storage, AKS, Key Vault)"
+    steps:
+      - command: terraform apply resource-group -auto-approve
+      - command: terraform apply network -auto-approve
+      - command: terraform apply storage -auto-approve
+      - command: terraform apply aks -auto-approve
+      - command: terraform apply key-vault -auto-approve
+
+  configure:
+    description: "Configure AKS cluster (namespaces, storage classes, ClusterSecretStore)"
+    steps:
+      - command: ansible playbook aks-config
+
+  deploy:
+    description: "Deploy workloads to AKS (ESO, ingress controller, demo app)"
+    steps:
+      - command: helmfile apply external-secrets
+      - command: helmfile apply ingress
+      - command: helmfile apply demo-app
+
+  full:
+    description: "Full deployment: infrastructure + configuration + workloads"
+    steps:
+      - command: terraform apply resource-group -auto-approve
+      - command: terraform apply network -auto-approve
+      - command: terraform apply storage -auto-approve
+      - command: terraform apply aks -auto-approve
+      - command: terraform apply key-vault -auto-approve
+      - command: ansible playbook aks-config
+      - command: helmfile apply external-secrets
+      - command: helmfile apply ingress
+      - command: helmfile apply demo-app
+
+  destroy:
+    description: "Destroy all infrastructure (reverse order)"
+    steps:
+      - command: helmfile destroy demo-app
+      - command: helmfile destroy ingress
+      - command: helmfile destroy external-secrets
+      - command: terraform destroy key-vault -auto-approve
+      - command: terraform destroy aks -auto-approve
+      - command: terraform destroy storage -auto-approve
+      - command: terraform destroy network -auto-approve
+      - command: terraform destroy resource-group -auto-approve
+
+  infra-plan:
+    description: "Plan all infrastructure changes (dry run)"
+    steps:
+      - command: terraform plan resource-group
+      - command: terraform plan network
+      - command: terraform plan storage
+      - command: terraform plan aks
+      - command: terraform plan key-vault

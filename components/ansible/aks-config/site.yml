@@ -1,0 +1,116 @@
+---
+- name: Configure AKS Cluster
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    namespaces: "{{ namespaces | default(['demo-app', 'ingress', 'external-secrets']) }}"
+    namespace_prefix: "{{ namespace | default('homelab') }}-{{ environment | default('ue2') }}-{{ stage | default('dev') }}"
+    key_vault_url: "{{ key_vault_url | default('') }}"
+    eso_identity_client_id: "{{ eso_identity_client_id | default('') }}"
+    azure_tenant_id: "{{ azure_tenant_id | default('') }}"
+
+  tasks:
+    - name: Verify kubectl connectivity
+      ansible.builtin.command: kubectl cluster-info
+      changed_when: false
+      register: cluster_info
+
+    - name: Display cluster info
+      ansible.builtin.debug:
+        msg: "{{ cluster_info.stdout_lines }}"
+
+    - name: Create namespaces
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ item }}"
+            labels:
+              managed-by: atmos-ansible
+              environment: "{{ stage | default('dev') }}"
+      loop: "{{ namespaces }}"
+
+    - name: Create ClusterSecretStore for Azure Key Vault
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: external-secrets.io/v1beta1
+          kind: ClusterSecretStore
+          metadata:
+            name: azure-key-vault
+            labels:
+              managed-by: atmos-ansible
+          spec:
+            provider:
+              azurekv:
+                authType: WorkloadIdentity
+                vaultUrl: "{{ key_vault_url }}"
+                serviceAccountRef:
+                  name: external-secrets-sa
+                  namespace: external-secrets
+      when: key_vault_url != ''
+
+    - name: Create Azure Files StorageClass
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: azure-file-csi
+            labels:
+              managed-by: atmos-ansible
+          provisioner: file.csi.azure.com
+          allowVolumeExpansion: true
+          mountOptions:
+            - dir_mode=0777
+            - file_mode=0777
+            - uid=0
+            - gid=0
+            - mfsymlinks
+            - cache=strict
+            - actimeo=30
+            - nosharesock
+          parameters:
+            skuName: Standard_LRS
+
+    - name: Create Azure Blob StorageClass
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: azure-blob-nfs
+            labels:
+              managed-by: atmos-ansible
+          provisioner: blob.csi.azure.com
+          allowVolumeExpansion: true
+          parameters:
+            skuName: Standard_LRS
+            protocol: nfs
+
+    - name: Verify CSI drivers are available
+      ansible.builtin.command: kubectl get csidrivers
+      changed_when: false
+      register: csi_drivers
+
+    - name: Display CSI drivers
+      ansible.builtin.debug:
+        msg: "{{ csi_drivers.stdout_lines }}"
+
+    - name: Verify ClusterSecretStore status
+      ansible.builtin.command: kubectl get clustersecretstore azure-key-vault -o jsonpath='{.status.conditions[0].status}'
+      changed_when: false
+      register: css_status
+      when: key_vault_url != ''
+      ignore_errors: true
+
+    - name: Display ClusterSecretStore status
+      ansible.builtin.debug:
+        msg: "ClusterSecretStore ready: {{ css_status.stdout | default('unknown') }}"
+      when: key_vault_url != ''

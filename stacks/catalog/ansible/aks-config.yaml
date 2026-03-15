@@ -1,0 +1,15 @@
+components:
+  ansible:
+    aks-config:
+      metadata:
+        component: aks-config
+      settings:
+        ansible:
+          playbook: site.yml
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: "false"
+        ANSIBLE_FORCE_COLOR: "true"
+      vars:
+        namespaces:
+          - demo-app
+          - ingress

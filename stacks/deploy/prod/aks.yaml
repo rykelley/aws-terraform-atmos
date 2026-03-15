@@ -1,0 +1,76 @@
+import:
+  - orgs/homelab/_defaults
+  - catalog/terraform/resource-group
+  - catalog/terraform/network
+  - catalog/terraform/storage
+  - catalog/terraform/aks
+  - catalog/terraform/key-vault
+  - catalog/ansible/aks-config
+  - catalog/helmfile/external-secrets
+  - catalog/helmfile/ingress
+  - catalog/helmfile/demo-app
+
+vars:
+  environment: ue2
+  stage: prod
+  region: eastus2
+
+components:
+  terraform:
+    resource-group:
+      vars:
+        name: rg
+
+    network:
+      vars:
+        name: vnet
+        vnet_address_space:
+          - "10.20.0.0/16"
+        aks_subnet_prefix: "10.20.1.0/24"
+
+    storage:
+      vars:
+        name: storage
+        account_replication_type: GRS
+        blob_containers:
+          - name: app-data
+            access_type: private
+        file_shares:
+          - name: app-files
+            quota: 100
+
+    aks:
+      vars:
+        name: aks
+        kubernetes_version: "1.30"
+        system_node_count: 2
+        system_node_vm_size: Standard_D2s_v5
+        user_node_count: 2
+        user_node_vm_size: Standard_D4s_v5
+
+    key-vault:
+      vars:
+        name: kv
+        purge_protection_enabled: true
+
+  ansible:
+    aks-config:
+      vars:
+        namespaces:
+          - demo-app
+          - ingress
+          - external-secrets
+
+  helmfile:
+    external-secrets:
+      vars:
+        chart_version: "0.10.7"
+
+    ingress:
+      vars:
+        chart_version: "4.11.3"
+
+    demo-app:
+      vars:
+        api_replicas: 2
+        worker_replicas: 2

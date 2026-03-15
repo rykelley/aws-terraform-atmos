@@ -1,0 +1,8 @@
+components:
+  terraform:
+    resource-group:
+      metadata:
+        component: resource-group
+      vars:
+        name: rg
+        attributes: []

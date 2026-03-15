@@ -1,0 +1,27 @@
+vars:
+  namespace: homelab
+  tenant: null
+  delimiter: "-"
+  label_order:
+    - namespace
+    - environment
+    - stage
+    - name
+    - attributes
+  regex_replace_chars: "/[^a-zA-Z0-9-]/"
+  tags:
+    ManagedBy: Atmos
+    Project: homelab-aks
+
+terraform:
+  backend_type: azurerm
+  backend:
+    azurerm:
+      resource_group_name: tfstate-homelab
+      storage_account_name: homelabue2tfstate
+      container_name: tfstate
+      key: "terraform/{{ .component }}/{{ .vars.stage }}.tfstate"
+
+  providers:
+    azurerm:
+      features: {}
