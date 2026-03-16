@@ -73,13 +73,6 @@ module "aks" {
     system_assigned = true
   }
 
-  aad_profile = {
-    enable_azure_rbac     = var.rbac_enabled
-    tenant_id             = data.azurerm_client_config.current.tenant_id
-    admin_group_object_ids = []
-    managed               = true
-  }
-
   oidc_issuer_profile = {
     enabled = var.oidc_issuer_enabled
   }

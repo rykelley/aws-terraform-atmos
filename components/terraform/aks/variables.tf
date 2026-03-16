@@ -60,12 +60,6 @@ variable "kubernetes_version" {
   description = "Kubernetes version for AKS"
 }
 
-variable "rbac_enabled" {
-  type        = bool
-  default     = true
-  description = "Enable Kubernetes RBAC"
-}
-
 variable "oidc_issuer_enabled" {
   type        = bool
   default     = true

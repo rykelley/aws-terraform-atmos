@@ -56,6 +56,8 @@ components:
   ansible:
     aks-config:
       vars:
+        aks_resource_group_name: homelab-ue2-dev-rg
+        aks_cluster_name_override: homelab-ue2-dev-aks
         namespaces:
           - demo-app
           - ingress

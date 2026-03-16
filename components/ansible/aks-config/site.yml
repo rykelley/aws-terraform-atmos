@@ -5,13 +5,27 @@
   gather_facts: false
 
   vars:
-    namespaces: "{{ namespaces | default(['demo-app', 'ingress', 'external-secrets']) }}"
-    namespace_prefix: "{{ namespace | default('homelab') }}-{{ environment | default('ue2') }}-{{ stage | default('dev') }}"
-    key_vault_url: "{{ key_vault_url | default('') }}"
-    eso_identity_client_id: "{{ eso_identity_client_id | default('') }}"
-    azure_tenant_id: "{{ azure_tenant_id | default('') }}"
+    _atmos_env: "{{ atmos_environment | default('ue2') }}"
+    _ns: "{{ namespace | default('homelab') }}"
+    _stage: "{{ stage | default('dev') }}"
+    _prefix: "{{ _ns }}-{{ _atmos_env }}-{{ _stage }}"
+    _namespaces: "{{ namespaces | default(['demo-app', 'ingress', 'external-secrets']) }}"
+    _aks_rg: "{{ aks_resource_group_name | default(_prefix + '-rg') }}"
+    _aks_name: "{{ aks_cluster_name_override | default(_prefix + '-aks') }}"
+    _key_vault_url: "{{ key_vault_url | default('') }}"
+    _eso_client_id: "{{ eso_identity_client_id | default('') }}"
+    _azure_tenant_id: "{{ azure_tenant_id | default('') }}"
 
   tasks:
+    - name: Fetch AKS credentials
+      ansible.builtin.command: >
+        az aks get-credentials
+        --resource-group {{ _aks_rg }}
+        --name {{ _aks_name }}
+        --overwrite-existing
+        --admin
+      changed_when: true
+
     - name: Verify kubectl connectivity
       ansible.builtin.command: kubectl cluster-info
       changed_when: false
@@ -31,8 +45,8 @@
             name: "{{ item }}"
             labels:
               managed-by: atmos-ansible
-              environment: "{{ stage | default('dev') }}"
-      loop: "{{ namespaces }}"
+              environment: "{{ _stage }}"
+      loop: "{{ _namespaces }}"
 
     - name: Create ClusterSecretStore for Azure Key Vault
       kubernetes.core.k8s:
@@ -48,11 +62,11 @@
             provider:
               azurekv:
                 authType: WorkloadIdentity
-                vaultUrl: "{{ key_vault_url }}"
+                vaultUrl: "{{ _key_vault_url }}"
                 serviceAccountRef:
                   name: external-secrets-sa
                   namespace: external-secrets
-      when: key_vault_url != ''
+      when: _key_vault_url != ''
 
     - name: Create Azure Files StorageClass
       kubernetes.core.k8s:
@@ -107,10 +121,10 @@
       ansible.builtin.command: kubectl get clustersecretstore azure-key-vault -o jsonpath='{.status.conditions[0].status}'
       changed_when: false
       register: css_status
-      when: key_vault_url != ''
+      when: _key_vault_url != ''
       ignore_errors: true
 
     - name: Display ClusterSecretStore status
       ansible.builtin.debug:
         msg: "ClusterSecretStore ready: {{ css_status.stdout | default('unknown') }}"
-      when: key_vault_url != ''
+      when: _key_vault_url != ''
